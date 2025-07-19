@@ -1,19 +1,31 @@
 import { createSlice } from "@reduxjs/toolkit"
 
-const initialState= {
+import { adminLogin } from "./adminThunk"
+
+const initialState={
 
 }
 
 const adminSlice= createSlice({
-    name:'admin',
+    name:"seller",
     initialState,
     reducers:{
 
     },
     extraReducers:(builder)=>{
 
+builder.addCase(adminLogin.pending,(state,action)=>{
+
+})
+builder.addCase(adminLogin.fulfilled,(state,action)=>{
+
+})
+ builder.addCase(adminLogin.rejected,(state,action)=>{
+
+ })       
     }
 })
 
-export const {} = adminSlice.actions 
+
+export const {} = adminSlice.actions
 export default adminSlice.reducer
