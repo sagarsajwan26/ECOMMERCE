@@ -3,9 +3,7 @@ import { useSelector } from 'react-redux'
 
 function ProductPageMain() {
 const [sortBy, setSortBy] = useState('')
-const {allProducts,filterby,categorisedProduct , minPrice, maxPrice} = useSelector(state=> state.products)
-
-
+const {allProducts,filterby} = useSelector(state=> state.products)
 
 
 
@@ -16,33 +14,14 @@ if(sortBy==='asc'){
   else if(sortBy==='desc'){
  filterProduct = [...allProducts].sort((a,b)=> a.price -b.price )
   }
-  else if(filterby.trim()){
-   const catObj =categorisedProduct.find(prod=> { return  prod.category===filterby
-   })
-
- filterProduct= catObj? catObj.products:[]
-
-
-
-
-    
-  }
   else{
     filterProduct= allProducts
   }
- if(minPrice || maxPrice) filterProduct = filterProduct.filter(item=> item.price>minPrice && item.price<maxPrice
 
-) 
 
 if(allProducts.length===0) return <div>Loading...</div>
-// console.log(filterProduct);
-
-  // console.log(filterProduct);
-  
-
 
   return (
-  
  <main className="bg-base-100 border border-gray-300 min-h-[40vh] md:col-span-6 col-span-1 w-full text-2xl text-gray-400 rounded-xl">
   {/* Filter and Sort Row */}
   <div className="flex flex-col md:flex-row md:justify-between items-center gap-6 px-10 pt-10">
@@ -61,7 +40,7 @@ if(allProducts.length===0) return <div>Loading...</div>
     </div>
   </div>
 
- 
+  {/* Product Grid */}
   <div className="flex flex-wrap gap-6 w-full px-6 py-10">
     {filterProduct?.map(product => (
       <div className="card w-80 bg-base-100 shadow border border-base-200 flex flex-col" key={product._id}> 

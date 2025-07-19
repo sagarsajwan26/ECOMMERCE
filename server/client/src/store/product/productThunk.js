@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../utils/axios";
 
 export const getPoductsForUser= createAsyncThunk('/user/getProducts',async()=>{
-    const res= await axiosInstance.get(`/user/getProducts?limit=${50}&skip=${0}`)
+    const res= await axiosInstance.get(`/user/getProducts?limit=${10}&skip=${0}`)
     return res.data
    
     

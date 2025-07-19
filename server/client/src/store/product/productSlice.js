@@ -6,9 +6,7 @@ const initialState= {
     similarProducts:[],
     categorisedProduct:[],
     featuredProduct:[],
-    filterby:'',
-    minPrice:null,
-    maxPrice:null
+    filterby:''
 
 }
 
@@ -19,13 +17,6 @@ const productSlice= createSlice({
     reducers:{
         categoryFilter:(state,action)=>{
             state.filterby=action.payload
-        },
-        minMaxUpdate:(state,action)=>{
-            console.log(action.payload);
-            state.maxPrice= action.payload.highestPrice 
-            state.minPrice= action.payload.lowestPrice
-            
-            
         }
     },
     extraReducers:(builder)=>{
@@ -79,5 +70,5 @@ state.featuredProduct= action.payload.success
 })
 
 
-export const {categoryFilter,minMaxUpdate} = productSlice.actions 
+export const {categoryFilter} = productSlice.actions 
 export default productSlice.reducer

@@ -1,18 +1,12 @@
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { FaStar } from "react-icons/fa";
-import { categoryFilter, minMaxUpdate } from '../../store/product/productSlice';
+import { categoryFilter } from '../../store/product/productSlice';
 
 function ProductPageSidebar() {
   const [lowestPrice, setLowestPrice] = useState(0)
   const [highestPrice, setHighestPrice] = useState(1000)
- 
   const { categorisedProduct } = useSelector(state => state.products)
-
-  const handleMinMaxPrice= ()=>{
-      dispatch(minMaxUpdate({highestPrice,lowestPrice}))
-  }   
-
   const dispatch= useDispatch()
   if (!categorisedProduct || categorisedProduct.length === 0)
     return <div className="p-6">Loading...</div>
@@ -60,12 +54,18 @@ function ProductPageSidebar() {
         <div className="mb-2 text-sm text-gray-400">
           {lowestPrice} - {highestPrice}
         </div>
-        <button 
-        onClick={handleMinMaxPrice}
-        className="btn btn-primary btn-sm w-full" type="button">Filter</button>
+        <button className="btn btn-primary btn-sm w-full" type="button">Filter</button>
       </section>
 
-     
+      {/* Ratings */}
+      <section>
+        <h2 className="text-lg font-bold text-primary mb-3">Rating</h2>
+        <div className="flex gap-1 items-center">
+          {[1,2,3,4,5].map(star => (
+            <FaStar key={star} className="text-yellow-400"/>
+          ))}
+        </div>
+      </section>
     </aside>
   )
 }

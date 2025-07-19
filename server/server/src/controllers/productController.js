@@ -5,10 +5,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { AsyncHandler } from "../utils/AsyncHandler.js";
 
 export const getProductList = AsyncHandler(async (req, res) => {
-    const limit = parseInt(req.query.limit) || 60;
+    const limit = parseInt(req.query.limit) || 24;
     const skip = parseInt(req.query.skip) || 0;
-    console.log('hgi');
-    
 
     const products = await Product.find().limit(limit).skip(skip);
 
