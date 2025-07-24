@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { getCategorisedProduct, getFeaturedProduct, getPoductsForUser } from "./productThunk"
+import { getCategorisedProduct, getFeaturedProduct, getPoductsForUser, getSingleProductDetails } from "./productThunk"
 
 const initialState= {
     allProducts:[],
@@ -8,7 +8,10 @@ const initialState= {
     featuredProduct:[],
     filterby:'',
     minPrice:null,
-    maxPrice:null
+    maxPrice:null,
+    inputSearch:'',
+    totalProducts:null,
+    productDetail:null
 
 }
 
@@ -26,15 +29,28 @@ const productSlice= createSlice({
             state.minPrice= action.payload.lowestPrice
             
             
+        },
+        inputSearchUpdate:(state,action)=>{
+            state.inputSearch= action.payload
         }
     },
     extraReducers:(builder)=>{
-builder.addCase(getPoductsForUser.pending,(state,action)=>{
-    state.allProducts= []
-})
+
 builder.addCase(getPoductsForUser.fulfilled,(state,action)=>{
 
-  state.allProducts= action.payload.success
+
+const planeArray= [...state.allProducts]
+
+
+
+    const ids= new Set(state.allProducts.map(p=> p._id))
+ 
+    
+    const uniqueNewProducts= action.payload.success.products.filter(p=> !ids.has(p._id))
+
+  state.allProducts= [...state.allProducts, ...uniqueNewProducts]
+  state.totalProducts= action.payload.success.total
+  
   
 })
  builder.addCase(getPoductsForUser.rejected,(state,action)=>{
@@ -49,7 +65,6 @@ builder.addCase(getCategorisedProduct.pending,(state,action)=>{
 })
 builder.addCase(getCategorisedProduct.fulfilled,(state,action)=>{
 
- console.log(action.payload);
  state.categorisedProduct= action.payload.success
  
   
@@ -72,12 +87,19 @@ state.featuredProduct= action.payload.success
     state.featuredProduct=[]
  })
 
+builder.addCase(getSingleProductDetails.fulfilled,(state,action)=>{
+    state.productDetail = action.payload
+    
+})
 
+builder.addCase(getSingleProductDetails.rejected,(state,action)=>{
+    state.productDetail=null
+})
 
 
     }
 })
 
 
-export const {categoryFilter,minMaxUpdate} = productSlice.actions 
+export const {categoryFilter,minMaxUpdate,inputSearchUpdate} = productSlice.actions 
 export default productSlice.reducer

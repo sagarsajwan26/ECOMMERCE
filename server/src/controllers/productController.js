@@ -7,13 +7,14 @@ import { AsyncHandler } from "../utils/AsyncHandler.js";
 export const getProductList = AsyncHandler(async (req, res) => {
     const limit = parseInt(req.query.limit) || 60;
     const skip = parseInt(req.query.skip) || 0;
-    console.log('hgi');
+    
     
 
     const products = await Product.find().limit(limit).skip(skip);
+const total = await Product.countDocuments(); 
 
-        if(products.length ===0) return res.status(404).json({message:"internal server error while loading products for you"})
-    return res.status(200).json(new ApiResponse(200, products, "Products fetched"));
+      
+    return res.status(200).json(new ApiResponse(200, {products,total}, "Products fetched"));
 });
 
 export const getProductReview= AsyncHandler(async(req,res)=>{
@@ -47,10 +48,10 @@ export const allGroupedProducts = AsyncHandler(async (req, res) => {
       "Sports","Beauty","Automotive","Grocery"
     ];
 
-    // Fetch all products
+  
     const products = await Product.find({});
     if(products.length ===0) return res.status(401).json({message:"internal server error"})
-    // Group by category
+    
     const result = allCategories.map(cat => ({
       category: cat,
       products: products.filter(p => p.category.includes(cat))
@@ -70,3 +71,30 @@ export const getFeaturedProducts= AsyncHandler(async(req,res)=>{
     if(featuredProducts.length===0) return res.status(500).json({message:"internal server error"})
     return res.status(200).json(new ApiResponse(200,featuredProducts,'featured product fetched'))
 })
+
+
+
+export const getProductDetail= AsyncHandler(async(req,res)=>{
+
+    
+    
+    const {id} = req.params 
+    if(!id) return res.status(404).json({message:"the product is invalid or has been removed by the owner"})
+        console.log(id);
+    
+        const product= await Product.findById(id).populate({
+            path:"reviews",
+            populate:{
+                path:'user',
+                select:"username profileImage"
+            }
+        })
+     
+        
+   
+        
+        if(!product) return res.status(404).json({message:"the product is invalid or has been removed by the owner"})
+
+            return res.status(200).json(new ApiResponse(200,product, 'product found'))
+
+    })

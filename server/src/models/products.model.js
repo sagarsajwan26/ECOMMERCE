@@ -54,13 +54,11 @@ const productSchema = new mongoose.Schema({
     average: { type: Number, default: 0 },
     count: { type: Number, default: 0 }
   },
-  reviews: [
-    {
-      type:mongoose.Schema.Types.ObjectId,
-      ref:'Review',
-      default:[]
-    }
-  ],
+  reviews:{
+    type:[mongoose.Schema.Types.ObjectId],
+    ref:"Review",
+    default:[]
+  },
   isPublished: {
     type: Boolean,
     default: false

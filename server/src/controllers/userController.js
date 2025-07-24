@@ -6,6 +6,10 @@ import { EmailVerification } from '../models/emailVerification.model.js'
 import { transporter } from '../middleware/nodemail.middleware.js'
 import { Cart } from '../models/cart.model.js'
 import { Product } from '../models/products.model.js'
+import { uploadToCloudinary } from '../utils/cloudinary.js'
+import Stripe from 'stripe'
+import {orderModel} from '../models/order.model.js'
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const generateAccessToken = async id => {
     if (!id)
@@ -118,8 +122,17 @@ export const loginUser = AsyncHandler(async (req, res) => {
         return res.status(401).json({ message: 'You are not authorized' })
     }
     const token = await generateAccessToken(findUser._id)
+const existingUser = await User.findById(findUser._id)
+  .populate({
+    path: "cart",
+    populate: {
+      path: "products.productId", 
+      model: "Product"
+    }
+  })
+  .populate("wishList"); 
 
-    const existingUser = await User.findById(findUser._id)
+
     return res
         .status(200)
         .cookie('userToken', token, {
@@ -222,11 +235,12 @@ export const resetPasswordLink = AsyncHandler(async (req, res) => {
 export const updateUserInfo=AsyncHandler(async(req,res)=>{
    
     
-    const loggedUser= req.user._id 
-    ;
+    const loggedUser= req.user._id ;
+    console.log(req.params.userId);
     
-    const {userId} = req.query 
-    console.log(req.body);
+    const {userId} = req.params 
+ 
+  
     
     if(loggedUser.toString() !== userId) return res.status(401).json({message:'you are not authorize'})
         const {username,  contactNumber, address,dateOfBirth , gender, favoriteCategories } = req.body
@@ -242,11 +256,14 @@ export const updateUserInfo=AsyncHandler(async(req,res)=>{
         },
         contactNumber:contactNumber,
         address:address,
-        dateOfBirth:dateOfBirth,
+        dateOfBirth:new Date(dateOfBirth),
         gender,
-        favoriteCategories:favoriteCategories.split(',').map(tag=> tag.trim())
+        favoriteCategories:favoriteCategories.map(item=> item)
 
     })
+  console.log(userUpdate);
+  
+    
 return res.status(200).json(new ApiResponse(200,userUpdate,'user data updated successfully'))
 
 
@@ -254,8 +271,8 @@ return res.status(200).json(new ApiResponse(200,userUpdate,'user data updated su
 
 export const addProductToCart = AsyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id)
-    console.log('hi')
-    if (!user) return res.status(404).json({ message: 'user not found' })
+   
+    if (!user) return res.status(404).json({ message: 'Please login to access your cart' })
 
     const { id: recProductId } = req.params
     if (!recProductId)
@@ -266,11 +283,11 @@ export const addProductToCart = AsyncHandler(async (req, res) => {
         'productId quantity price'
     )
 
-    console.log(cart)
+
     const existingProduct = cart.products.find(
         product => product.productId.toString() === recProductId
     )
-    console.log('hi i am existing', existingProduct)
+    
     if (!existingProduct) {
         cart.products.push({
             productId: recProductId,
@@ -286,28 +303,75 @@ export const addProductToCart = AsyncHandler(async (req, res) => {
         (sum, item) => sum + item.price * item.quantity,
         0
     )
+    const updatedCart= await Cart.findOne({ userId: user._id }).populate('products.productId')
+  
+    
 
     await cart.save()
     return res
         .status(200)
-        .json(new ApiResponse(200, cart, 'cart updated successfully'))
+        .json(new ApiResponse(200, updatedCart, 'cart updated successfully'))
+})
+
+export const updateUserProfilePic= AsyncHandler(async(req,res)=>{
+  
+  
+    
+ 
+   if(!req.file) return res.status(401).json({message:"file is required"}) 
+    let file = await uploadToCloudinary(req.file.path) 
+
+   if(!file) return res.status(500).json({message:"photo upload failed"})
+    
+    
+    const updateProfile= await User.findByIdAndUpdate(req.user._id,{
+        profileImage:file.secure_url
+    },
+{new:true})
+
+console.log(updateProfile);
+
+
+   return res.status(200).json(new ApiResponse(200,updateProfile,'profile picture uploaded successfully'))
+ 
+})
+
+export const getUserProfile= AsyncHandler(async(req,res)=>{
+    const userId= req.user._id 
+    if(!userId) return res.status(401).json({message:"user id is missing"})
+        const user= await User.findById(userId) .populate({
+    path: "cart",
+    populate: {
+      path: "products.productId", 
+      model: "Product"
+    }
+  })
+console.log(user);
+return res.status(200).json(new ApiResponse(200, user,'user fetched'))
 })
 
 export const removeFromCart = AsyncHandler(async (req, res) => {
     const { option } = req.query
-    console.log(option)
+   
+console.log('hi');
 
     const { id: recProductId } = req.params
+
+    
     if (!recProductId)
         return res.status(404).json({ message: 'inavlid product id' })
 
     const cart = await Cart.findOne({ userId: req.user._id })
-    console.log(cart)
+    
+    
+   
     if (!cart) return res.status(404).json({ message: 'cart not found' })
 
     const findIndex = await cart.products.findIndex(
-        product => product.toString() === recProductId
+        product =>product.productId.toString()=== recProductId
+        
     )
+   
     if (findIndex === -1) {
         return res.status(404).json({ message: 'no product found' })
     }
@@ -331,10 +395,13 @@ export const removeFromCart = AsyncHandler(async (req, res) => {
     )
 
     await cart.save()
-
-    return res
+ const updatedCart= await Cart.findOne({userId:req.user._id}).populate('products.productId')
+ 
+    console.log(updatedCart);
+    
+ return res
         .status(200)
-        .json(new ApiResponse(200, cart, 'cart has been updated successfully'))
+        .json(new ApiResponse(200, updatedCart, 'cart has been updated successfully'))
 })
 
 export const addTowishList = AsyncHandler(async (req, res) => {
@@ -379,3 +446,80 @@ export const removeFromwishList = AsyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, user.wishList, 'Product removed from wishList'))
 })
+
+
+export const userPayment= AsyncHandler(async(req,res)=>{
+
+
+
+const {products}= req.body
+const user= await User.findById(req.user._id).populate({
+    path:'cart',
+    populate:{
+        path:"products.productId",
+        model:"Product"
+    }
+})
+if(!user) return res.status(404).json({message:"user not found"})
+const cart= user.cart
+
+
+
+
+ try {
+     const session= await stripe.checkout.sessions.create({
+    payment_method_types:['card'],
+    mode:"payment",
+      invoice_creation: {
+    enabled: true,        
+  },
+    line_items: cart.products.map(item=> ({
+        price_data:{
+            currency:'inr',
+            product_data:{
+                name:item.productId.title,
+            },
+            unit_amount:Math.round(item.productId.price * 100)
+
+        },
+        quantity:Math.round(item.quantity)
+    })) ,
+    success_url:'http://localhost:5173/paymentSuccessful',
+ cancel_url:'http://localhost:5173/cancelpayment'
+ })
+
+ const order= await orderModel.create({
+    user: req.user._id,
+    orderItems: cart.products.map(item => ({
+        product: item.productId._id,
+        name: item.productId.title,
+        qty: item.quantity,
+        price: item.productId.price
+    })),
+    shippingAddress: user.address,
+    paymentMethod: 'Stripe',
+    itemsPrice: cart.totalPrice,
+    shippingPrice: 0, 
+    totalPrice: cart.totalPrice + 0, 
+    isPaid: true
+ })
+await Cart.findOne({ userId: user._id }).then(cart => {
+    cart.products = []
+    cart.totalPrice = 0
+    return cart.save()
+})
+ 
+ await User.findByIdAndUpdate(user._id, {
+    $push: { orderHistory: order._id }})
+return res.status(200).json(new ApiResponse(200,session.url,'payment successful'))
+ } catch (error) {
+    return res.status(500).json({message:"internal server error while processing payment",error:error.message})
+ }
+ 
+
+
+
+})
+
+
+

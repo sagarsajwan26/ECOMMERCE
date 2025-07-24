@@ -37,10 +37,12 @@ const userSchema = new mongoose.Schema({
 
   
   profileImage: {
-    type: String
+    type: String,
+    default:''
   },
   dateOfBirth: {
-    type: Date
+    type: Date,
+    
   },
   gender: {
     type: String,
@@ -82,27 +84,6 @@ const userSchema = new mongoose.Schema({
     }
   ],
  
-  savedAddresses: [
-    {
-      type: String
-    }
-  ],
-  passwordResetToken: {
-    type: String
-  },
-  tokenExpiry: {
-    type: Date
-  },
-  loginAttempts: {
-    type: Number,
-    default: 0
-  },
-  lastLogin: {
-    type: Date
-  },
-  lastActiveAt: {
-    type: Date
-  },
  
 
 }, {

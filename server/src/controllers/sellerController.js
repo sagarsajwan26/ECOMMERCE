@@ -9,6 +9,7 @@ import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { Product } from "../models/products.model.js";
 
 
+
 const generateLoginId=async() =>{
 let checkExistingLoginId= false;
 let LoginId;
@@ -46,19 +47,18 @@ const generateAccessToken = async(id)=>{
 }
 
 
-
-
 export const signup = AsyncHandler(async(req,res)=>{    
-    const {username, email , password,storeName, contactNumber, address, productCategories, } = req.body 
+    const {firstName, lastName, email , password,storeName, contactNumber, address, productCategories, } = req.body 
    
-    console.log(req.body);
+
+
     
 const checkExistingAccount = await Seller.findOne({email
 })
 
 if(checkExistingAccount) return res.status(401).json({message:"user already exist"})
 
-    if(!username.firstName.trim() || !email.trim() || !password.trim() || !storeName.trim() || !contactNumber || !address.trim()) {
+    if(!firstName.trim() || !email.trim() || !password.trim() || !storeName.trim() || !contactNumber || !address.trim()) {
         return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -67,8 +67,8 @@ const LoginId= await generateLoginId()
 
 const newSeller= await Seller.create({
     username:{
-        firstName:username.firstName,
-        lastName:username.lastName
+        firstName:firstName,
+        lastName:lastName
     },
     email,
     password,
@@ -88,7 +88,8 @@ const verifyToken= await jwt.sign({
 
 const verifyLink = await EmailVerification.create({
     email: newSeller._id,
-    verifyToken: verifyToken 
+    verifyToken: verifyToken ,
+    userType:'Seller'
     
 })
 
@@ -98,7 +99,7 @@ const mailOptions = {
     from :process.env.EMAIL_USER,
     to:newSeller.email,
     subject:"welcome to our E-commerce platform",
-    text:`Hello ${newSeller.username.firstName},\n\nWelcome to our E-commerce platform! Your account has been successfully created.\n\nYour Login ID is: ${newSeller.LoginId}\n\nThank you for joining us!\n\nBest regards,\nE-commerce Team .click on the link below to verify your email\n\nhttp://localhost:5000/api/v1/seller/verify-email/${verifyToken}`
+    text:`Hello ${newSeller.firstName},\n\nWelcome to our E-commerce platform! Your account has been successfully created.\n\nYour Login ID is: ${newSeller.LoginId}\n\nThank you for joining us!\n\nBest regards,\nE-commerce Team .click on the link below to verify your email\n\nhttp://localhost:5000/api/v1/seller/verify-email/${verifyToken}`
 }
 
 
@@ -174,13 +175,20 @@ export const loginSeller= AsyncHandler(async(req,res)=>{
                 return res.status(401).json({message:"you are not authorize"})
                 
             }
-            console.log('how are you');
+       
+          
             const token = await generateAccessToken(existingSeller._id)
-            return res.status(200).cookie('sellerToken',token ,{
-                maxAge: 24 * 60 * 60 * 1000, 
-                secure: process.env.NODE_ENV === 'production',
+            if(!token) return res.status(401).json({message:"error while generating token please try after few minutes"})
+          
+
+              return res.status(200).cookie('sellerToken',token,{
+                maxAge: 24 * 60 * 60 * 1000,
+                secure: process.env.NODE_ENV === "production",
                 httpOnly: true,
-            }).json({existingSeller, token})
+         
+              }).json(new ApiResponse
+                (200,{existingSeller,token},'successfully logged in'))
+              
 
 })
 
@@ -305,4 +313,13 @@ if(!title.trim()|| !description.trim() || !category.trim() || !price || !stock )
         return res.status(200).json(new ApiResponse(200,{
            loggedUser
         },'product deleted successfully'))
+    })
+
+
+    export const getOrderList= AsyncHandler(async(req,res)=>{
+        const logginSellerId= req.seller.id 
+       
+        const seller= await Seller.findByIdAndDelete(logginSellerId)
+         console.log(seller);
+         
     })

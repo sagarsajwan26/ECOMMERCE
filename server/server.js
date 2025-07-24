@@ -2,10 +2,16 @@ import 'dotenv/config'
 
 import { connectDB } from './src/db/db.js'
 import { app } from './src/app.js'
-import serverless from 'serverless-http'
 const PORT= process.env.PORT
 
 
-connectDB()
+connectDB().then(()=>{
+app.listen(PORT,()=>{
+    console.log('app is listening on port '+PORT);
+    
+})
 
-export default serverless(app)
+}).catch((error)=>{
+    console.error('Failed to connect to the database:', error); 
+})
+

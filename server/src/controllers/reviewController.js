@@ -6,6 +6,8 @@ import { AsyncHandler } from "../utils/AsyncHandler.js";
 export const addReview=AsyncHandler(async (req,res,next)=>{
     const {id:productId} = req.params 
     const {rating, comment} = req.body 
+
+    
     if(!rating && !comment.trim() ) return res.status(400).json({message:"rating is required least one field is required"}) 
     const user= req.user._id 
     const product= await Product.findById(productId)
@@ -18,6 +20,10 @@ export const addReview=AsyncHandler(async (req,res,next)=>{
            comment
         })
 
+            product.reviews.push(createReview._id)
+            await product.save()
+          
+            
         if(!createReview) return res.status(500).json({message:"internal server error while createing review"})
             return res.status(201).json(new ApiResponse(201,createReview,'review added successfully'))
 
@@ -31,8 +37,10 @@ export const deleteReview= AsyncHandler(async(req,res)=>{
 
     const comment= await Review.findById(commentId)
 
+
+
     if(!comment) return res.status(404).json({message:"comment not found"})
-        if(comment.user.toString() !==req.user._id) return res.status(401).json({message:"you are not authorize"})
+        if(comment.user.toString() !==req.user._id.toString()) return res.status(401).json({message:"you are not authorize"})
             await Review.findByIdAndDelete(commentId)
 
     return res.status(200).json({message:"comment deleted Successfully"})
@@ -54,7 +62,7 @@ if (review.user.toString() !== req.user._id.toString()) return res.status(401).j
             rating,
             comment
         },{new:true})
-        if(!updateComment) return res.status(400).json({message:'error while updating comment please try afte r some times'})
+        if(!updateComment) return res.status(400).json({message:'error while updating comment please try after some times'})
             return res.status(200).json(new ApiResponse(200,updateComment,"comment updated Successfully"))
     
 })

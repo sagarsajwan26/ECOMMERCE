@@ -1,5 +1,5 @@
 import Router from 'express'
-import { addProduct, deleteProduct, getAllProductsList, getSellerProfile,  loginSeller, logoutSeller, signup, updateProduct, verifyEmail } from '../controllers/sellerController.js'
+import { addProduct, deleteProduct, getAllProductsList, getOrderList, getSellerProfile,  loginSeller, logoutSeller, signup, updateProduct, verifyEmail } from '../controllers/sellerController.js'
 import { verifySellerToken } from '../middleware/auth.middleware.js'
 import { upload } from '../middleware/multer.middleware.js'
 
@@ -14,4 +14,5 @@ router.route('/add-product').post(verifySellerToken, upload.any('images'),addPro
 router.route("/getProductList").get(verifySellerToken,getAllProductsList)
 router.route('/update-product/:id').put(verifySellerToken,updateProduct)
 router.route('/delete-product/:id').delete(verifySellerToken,deleteProduct)
+router.route('/getOrderList').get(verifySellerToken,getOrderList)
 export default router
