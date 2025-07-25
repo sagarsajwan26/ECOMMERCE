@@ -24,6 +24,7 @@
     "react-redux": "^9.2.0",
     "react-router": "^7.7.0",
     "react-toastify": "^11.0.5",
+    "redux-persist": "^6.0.0",
     "stripe": "^18.3.0",
     "tailwindcss": "^4.1.11"
   },
