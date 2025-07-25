@@ -62,7 +62,7 @@ function SellerLoginSignup() {
 
 
   const handleLoginSignup = (data) => {
-    console.log("Form submitted:", data);
+    // console.log("Form submitted:", data);
 
     if(signupState){
     dispatch(sellerSignup(data)).then(res=> {
@@ -71,7 +71,7 @@ function SellerLoginSignup() {
           toast.error(res.payload)
         }
         else{
-          console.log(res);
+          // console.log(res);
           
         }
       
@@ -79,7 +79,7 @@ function SellerLoginSignup() {
     }
     else{
       dispatch(sellerLogin(data)).then(res=>{
-        console.log(res);
+        // console.log(res);
         if(res?.meta?.rejectedWithValue){
           toast.error(res.payload)
         }

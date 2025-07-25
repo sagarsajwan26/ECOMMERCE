@@ -1,202 +1,176 @@
-# 🛒 E-Commerce REST API
+# 🛒 ECOMMERCE PLATFORM - FULLSTACK PROJECT
 
-A full-featured Node.js + Express + MongoDB REST API for an e-commerce platform.  
-Supports **user**, **seller**, and **admin** roles, authentication, product management, cart, wishlist, reviews, and more.
-
----
-
-## 🚀 Quick Start
-
-### 1. **Clone the Repository**
-```bash
-git clone https://github.com/your-username/ecommerce-api.git
-cd ecommerce-api/server
-```
-
-### 2. **Install Dependencies**
-```bash
-npm install
-```
-
-### 3. **Environment Variables**
-Create a `.env` file in the `server` directory. Example:
-```
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/ecommerce
-JWT_SECRET=your_jwt_secret
-EMAIL_USER=your_gmail@gmail.com
-EMAIL_PASS=your_gmail_app_password
-CLOUD_NAME=your_cloudinary_name
-CLOUD_API_KEY=your_cloudinary_api_key
-CLOUD_API_SECRET=your_cloudinary_api_secret
-```
-> **Note:** For Gmail, use an [App Password](https://support.google.com/accounts/answer/185833?hl=en).
-
-### 4. **Start the Server**
-```bash
-npm run dev
-```
-Server runs on `http://localhost:5000`
+A complete MERN stack e-commerce platform supporting **users**, **sellers**, and **admins**.  
+This README will help you (and future contributors) understand the code flow, folder structure, and how to extend or debug the project.
 
 ---
 
-## 📚 API Structure
+## 📁 Folder Structure
 
-- **/api/v1/user** – User registration, login, cart, wishlist, reviews, etc.
-- **/api/v1/seller** – Seller registration, login, product management, etc.
-- **/api/v1/admin** – Admin registration, login.
+```
+ECOMMERCE/
+│
+├── client/         # React frontend (Vite)
+│   ├── src/
+│   │   ├── component/   # Reusable UI components
+│   │   ├── pages/       # Page-level components (User, Seller, Admin, Home)
+│   │   ├── store/       # Redux slices and thunks
+│   │   ├── utils/       # Axios instance, helpers
+│   │   ├── App.jsx      # Main app component
+│   │   └── main.jsx     # Entry point
+│   ├── public/          # Static assets
+│   └── package.json
+│
+├── server/         # Node.js backend (Express, MongoDB)
+│   ├── src/
+│   │   ├── controllers/ # Route handlers (user, seller, admin, product, review)
+│   │   ├── models/      # Mongoose schemas
+│   │   ├── routes/      # Express routers
+│   │   ├── middleware/  # Auth, multer, nodemailer, etc.
+│   │   ├── utils/       # Helper functions (cloudinary, ApiResponse, etc.)
+│   │   ├── db/          # MongoDB connection
+│   │   └── app.js       # Express app setup
+│   ├── server.js        # Entry point
+│   ├── vercel.json      # Vercel deployment config
+│   └── package.json
+│
+└── README.md       # This file
+```
+
+---
+
+## 🚀 How the Code Flows
+
+### 1. **Frontend (client/)**
+- **Pages**: Each role (User, Seller, Admin) has its own pages (login, dashboard, account, etc.).
+- **Components**: Reusable UI blocks (Navbar, Cart, ProductDetail, SellerDashboard, etc.).
+- **Redux Store**: State management for users, sellers, products, reviews.
+- **API Calls**: Use `axiosInstance` from `src/utils/axios.js` for all backend requests.
+- **Routing**: Uses `react-router-dom` for navigation.
+
+### 2. **Backend (server/)**
+- **Entry Point**: `server.js` connects to MongoDB and starts the Express app from `src/app.js`.
+- **App Setup**: `src/app.js` configures middleware (CORS, body parser, cookie parser), static files, and routes.
+- **Controllers**: Each controller handles business logic for its domain (user, seller, admin, product, review).
+- **Models**: Mongoose schemas for all entities (User, Seller, Product, Review, Cart, Order, etc.).
+- **Routes**: Each router maps HTTP endpoints to controller functions.
+- **Middleware**: Handles authentication, file uploads (multer), email (nodemailer), etc.
+- **Utils**: Helper functions for responses, cloudinary uploads, etc.
 
 ---
 
 ## 🧑‍💻 Main Features
 
-### Authentication
-- JWT-based for all roles (user, seller, admin)
-- Email verification for users and sellers
-- Password hashing with bcrypt
-
-### User
-- Register, login, logout
-- Email verification
-- Cart: add, remove, update products
-- Wishlist: add, remove products
-- Product reviews: add, edit, delete
-- Password reset via email
-
-### Seller
-- Register, login, logout
-- Email verification
-- Add, update, delete products
-- View own products
-
-### Admin
-- Register, login, logout
-
-### Product
-- List all products (with pagination)
-- Get product reviews
-
-### Review
-- Add, edit, delete reviews (users only)
+- **User**: Signup, login, cart, wishlist, profile, reviews, password reset, email verification.
+- **Seller**: Signup, login, add/update/delete products, view orders, profile, email verification.
+- **Admin**: Signup, login, dashboard.
+- **Product**: List, search, filter, review, suggest products.
+- **Review**: Add, edit, delete reviews.
+- **Order**: Place, view, manage orders.
+- **File Uploads**: Product images, profile pictures via Cloudinary.
+- **Email**: Verification and password reset via Nodemailer (supports OAuth2).
+- **Authentication**: JWT-based, cookies for session management.
 
 ---
 
-## 🛠️ Endpoints Overview
+## 🛠️ How to Extend or Debug
 
-### User
+### **Frontend**
+- To add a new page: Create a component in `src/pages/` and add a route in `App.jsx`.
+- To add a new API call: Add a thunk in `src/store/[role]/[role]Thunk.js` and handle it in the slice.
+- To update UI: Edit components in `src/component/`.
 
-| Method | Endpoint                              | Description                       | Auth Required |
-|--------|---------------------------------------|-----------------------------------|--------------|
-| POST   | `/api/v1/user/signup`                 | Register new user                 | No           |
-| POST   | `/api/v1/user/login`                  | Login user                        | No           |
-| POST   | `/api/v1/user/logout`                 | Logout user                       | Yes          |
-| GET    | `/api/v1/user/verify-email/:id`       | Verify user email                 | No           |
-| POST   | `/api/v1/user/addToCart/:id`          | Add product to cart               | Yes          |
-| PUT    | `/api/v1/user/removeFromCart/:id`     | Remove or decrement product in cart| Yes         |
-| POST   | `/api/v1/user/resetPassword`          | Send reset password link          | No           |
-| POST   | `/api/v1/user/addReview`              | Add product review                | Yes          |
-| DELETE | `/api/v1/user/deleteReview/:id`       | Delete review                     | Yes          |
-| PUT    | `/api/v1/user/updateReview/:id`       | Edit review                       | Yes          |
-| POST   | `/api/v1/user/wishlist/:id`           | Add product to wishlist           | Yes          |
-| DELETE | `/api/v1/user/wishlist/:id`           | Remove product from wishlist      | Yes          |
-
-### Seller
-
-| Method | Endpoint                                  | Description                       | Auth Required |
-|--------|-------------------------------------------|-----------------------------------|--------------|
-| POST   | `/api/v1/seller/signup`                   | Register new seller               | No           |
-| POST   | `/api/v1/seller/login`                    | Login seller                      | No           |
-| POST   | `/api/v1/seller/logout`                   | Logout seller                     | Yes          |
-| GET    | `/api/v1/seller/verify-email/:verifyToken`| Verify seller email               | No           |
-| GET    | `/api/v1/seller/getProfile`               | Get seller profile                | Yes          |
-| POST   | `/api/v1/seller/add-product`              | Add new product                   | Yes          |
-| GET    | `/api/v1/seller/getProductList`           | Get all seller's products         | Yes          |
-| PUT    | `/api/v1/seller/update-product/:id`       | Update product                    | Yes          |
-| DELETE | `/api/v1/seller/delete-product/:id`       | Delete product                    | Yes          |
-
-### Admin
-
-| Method | Endpoint                  | Description         | Auth Required |
-|--------|---------------------------|---------------------|--------------|
-| POST   | `/api/v1/admin/signup`    | Register admin      | No           |
-| POST   | `/api/v1/admin/login`     | Login admin         | No           |
-| POST   | `/api/v1/admin/logout`    | Logout admin        | Yes          |
-
-### Product
-
-| Method | Endpoint                        | Description             | Auth Required |
-|--------|---------------------------------|-------------------------|--------------|
-| GET    | `/api/v1/user/getProductReview` | Get product reviews     | No           |
-| GET    | `/api/v1/seller/getProductList` | Get seller's products   | Yes          |
+### **Backend**
+- To add a new endpoint:  
+  1. Add a function in the relevant controller in `src/controllers/`.
+  2. Map it in the router in `src/routes/`.
+- To add a new model: Create a schema in `src/models/`.
+- To add middleware: Create in `src/middleware/` and use in `app.js` or router.
+- To debug: Use `console.log` or a debugger in controllers/middleware.
 
 ---
 
-## 📝 Request & Response Examples
+## 🔒 Authentication & Cookies
 
-### User Signup
-
-**POST** `/api/v1/user/signup`
-```json
-{
-  "username": { "firstName": "John", "lastName": "Doe" },
-  "email": "john@example.com",
-  "password": "yourpassword",
-  "contactNumber": 1234567890,
-  "address": "123 Main St"
-}
-```
-
-### Seller Signup
-
-**POST** `/api/v1/seller/signup`
-```json
-{
-  "username": { "firstName": "Jane", "lastName": "Smith" },
-  "email": "jane@example.com",
-  "password": "yourpassword",
-  "storeName": "Jane's Store",
-  "contactNumber": 9876543210,
-  "address": "456 Market St",
-  "productCategories": ["Fashion", "Electronics"]
-}
-```
+- **Login**: On successful login, a JWT token is set in a cookie (`userToken`, `sellerToken`, `adminToken`).
+- **Logout**: The cookie is cleared (`maxAge: 0`) and Redux state is reset.
+- **Protected Routes**: Use auth middleware to check JWT and user role.
 
 ---
 
-## 🔒 Authentication
+## 📨 Email Setup
 
-- Use JWT tokens for all protected routes.
-- Tokens are sent via cookies (`userToken`, `sellerToken`, `adminToken`) or `Authorization: Bearer <token>` header.
-
----
-
-## 📦 File Uploads
-
-- Sellers can upload product images using `multipart/form-data` (handled by Multer and Cloudinary).
+- Uses Nodemailer for sending emails.
+- For OAuth2, set these env variables:
+  - `EMAIL_USER`, `EMAIL_CLIENT_ID`, `EMAIL_CLIENT_SECRET`, `EMAIL_REFRESH_TOKEN`
+- For password: use `EMAIL_USER`, `EMAIL_PASS`
 
 ---
 
-## 📧 Email
+## ☁️ File Uploads
 
-- Uses Gmail SMTP via Nodemailer for verification and password reset.
-- Make sure to use an App Password for Gmail.
-
----
-
-## 🧑‍💻 Contributing
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/YourFeature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin feature/YourFeature`)
-5. Open a Pull Request
+- Uses Multer for handling uploads.
+- Images are uploaded to Cloudinary via `uploadToCloudinary` util.
 
 ---
 
-## 🆘 Need Help?
+## ⚡ Deployment
 
-- **Issues:** [Open an issue](https://github.com/your-username/ecommerce-api/issues)
-- **Contact:** [your-email@example.com](mailto:your-email@example.com)
+- **Vercel**: Uses `vercel.json` for serverless deployment.
+- **Environment Variables**: Set secrets in Vercel dashboard or `.env` files.
+
+---
+
+## 📝 Common Patterns
+
+- **AsyncHandler**: Wraps async controller functions for error handling.
+- **ApiResponse**: Standardizes API responses.
+- **Redux Thunks**: All API calls are handled via thunks for async state updates.
+
+---
+
+## 🆘 Troubleshooting
+
+- **CORS errors**: Check `cors` config in `app.js` and ensure frontend URL matches.
+- **Cookie not removed**: Ensure `path`, `domain`, `secure`, and `sameSite` match when setting and removing cookies.
+- **PayloadTooLargeError**: Increase body parser limits in `app.js`:
+  ```js
+  app.use(express.json({ limit: '10mb' }))
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+  ```
+
+---
+
+## 📚 Useful Tips
+
+- Always use `react-router-dom` for navigation in React.
+- Use Redux slices for state management and keep API logic in thunks.
+- When editing backend, keep controller logic clean and reusable.
+- For new features, follow existing patterns for controllers, routes, and models.
+
+---
+
+## 🧩 How to Add a New Feature
+
+1. **Frontend**:  
+   - Create a new component/page.
+   - Add Redux state/thunk if needed.
+   - Add route in `App.jsx`.
+
+2. **Backend**:  
+   - Add controller function.
+   - Map in router.
+   - Update model if needed.
+
+3. **Test**:  
+   - Use Postman or frontend to test new endpoint.
+
+---
+
+## 📝 Contributing
+
+- Fork the repo, create a feature branch, commit changes, and open a PR.
+- Follow code style and patterns used in the project.
 
 ---
 
@@ -206,4 +180,4 @@ MIT
 
 ---
 
-**Happy Coding! 🚀**
+**For any questions or improvements, open an issue or contact the maintainer. Happy coding! 🚀**

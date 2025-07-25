@@ -23,7 +23,7 @@ import SellerAddProductPage from './component/Seller/SellerAddProductPage'
 function App() {
   const {logginUser} = useSelector(state=> state.user)
   const {logginSeller} = useSelector(state=> state.seller) 
-  console.log(logginSeller);
+ 
   
   return (
     <div className="h-screen" data-theme='dark'>

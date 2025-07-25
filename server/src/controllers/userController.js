@@ -102,9 +102,14 @@ export const signupUser = AsyncHandler(async (req, res) => {
 
 export const loginUser = AsyncHandler(async (req, res) => {
     const { email, password } = req.body
+
+
+
+
     if (!email?.trim() || !password?.trim()) {
         return res.status(400).json({ message: 'All fields are required' })
     }
+   
     const findUser = await User.findOne({ email }).select('+password')
     if (!findUser) return res.status(401).json({ message: 'User not found' })
     if (findUser.isBlocked)
@@ -114,6 +119,7 @@ export const loginUser = AsyncHandler(async (req, res) => {
                 message:
                     'your account has been blocked please contact our branch for more information'
             })
+
     if (!findUser.isEmailVerified)
         return res.status(401).json({ message: 'please verify your email first' })
 
@@ -145,6 +151,8 @@ const existingUser = await User.findById(findUser._id)
 })
 
 export const logoutUser = AsyncHandler(async (req, res) => {
+    console.log('i am logout');
+    
     return res
         .status(200)
         .cookie('userToken', '', {
@@ -236,7 +244,7 @@ export const updateUserInfo=AsyncHandler(async(req,res)=>{
    
     
     const loggedUser= req.user._id ;
-    console.log(req.params.userId);
+   
     
     const {userId} = req.params 
  
@@ -244,6 +252,7 @@ export const updateUserInfo=AsyncHandler(async(req,res)=>{
     
     if(loggedUser.toString() !== userId) return res.status(401).json({message:'you are not authorize'})
         const {username,  contactNumber, address,dateOfBirth , gender, favoriteCategories } = req.body
+
 
     if(!username.firstName || !contactNumber || !address.trim() ){
         return res.status(400).json({message:"fields are compulsory"})

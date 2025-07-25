@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { getUserProfle, loginUser, updateUserDetails, updateUserProfilePic } from "./userThunk"
+import { getUserProfle, loginUser, updateUserDetails, updateUserProfilePic, userLogout } from "./userThunk"
 import { addProductToCart, removeProductFromCart } from "../product/productThunk"
 
 const initialState={
@@ -55,6 +55,10 @@ builder.addCase(updateUserProfilePic.fulfilled,(state,action)=>{
     console.log(action.payload);
     state.logginUser.profileImage=action.payload.success.profileImage
     
+})
+
+builder.addCase(userLogout.fulfilled,(state,action)=>{
+    state.logginUser= null
 })
 
 

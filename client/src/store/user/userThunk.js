@@ -19,6 +19,19 @@ export const loginUser= createAsyncThunk('/user/login',async(data,{rejectWithVal
    
     
 })
+export const userLogout= createAsyncThunk('/user/logout', async(data,{rejectWithValue})=>{
+  const token = localStorage.getItem('userToken')
+    try {
+        const res= await axiosInstance.post('/user/logout',{
+          headers:{
+            'Authorization':`Bearer ${token}`
+          }
+        })
+    } catch (error) {
+        return rejectWithValue(error.response.payload.message)
+    }
+})
+
 
 
 export const signupUser= createAsyncThunk('/user/signup',async(data,{rejectWithValue})=>{

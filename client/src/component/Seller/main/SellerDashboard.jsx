@@ -10,13 +10,24 @@ import {
   HiChevronDown,
 } from "react-icons/hi2";
 import { MdCancel } from "react-icons/md";
-import { Link } from "react-router";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router";
+import { sellerLogout } from "../../../store/seller/sellerThunk";
 
 const SellerDashboard = () => {
   const [profileOption, setProfileOption] = useState(false);
   const profileRef = useRef();
+  const dispatch = useDispatch();
+  const { ordersDetails, logginSeller } = useSelector((state) => state.seller);
 
-  // Hide profile dropdown when clicking outside
+  const orderList = ordersDetails?.orders || [];
+  const navigate = useNavigate();
+
+  const totalItemsInStock = logginSeller?.currentSellingProducts?.reduce(
+    (acc, item) => acc + item.stock,
+    0
+  );
+
   React.useEffect(() => {
     function handleClick(e) {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -29,49 +40,75 @@ const SellerDashboard = () => {
     }
   }, [profileOption]);
 
+  if (!logginSeller) return <div>Please login first</div>;
+
+  const handleLogout = () => {
+    dispatch(sellerLogout())
+      .unwrap()
+      .then(() => {
+        localStorage.removeItem("sellerToken");
+        navigate("/seller-login");
+      })
+      .catch((err) => {
+        console.error("Logout failed:", err);
+      });
+  };
+
   return (
     <div className="min-h-screen bg-base-200 text-base-content" data-theme="dark">
       {/* Navbar */}
-      <nav className="flex items-center justify-end bg-base-100 px-6 py-4 shadow-md border-b border-gray-300 dark:border-gray-700">
-        <div className="flex items-center gap-3 relative">
-          <HiSun className="text-2xl text-primary" />
+      <nav className="flex items-center justify-end bg-base-100 px-6 py-4 shadow-md border-b border-gray-300 dark:border-gray-700 space-x-6 relative">
+        <HiSun className="text-2xl text-primary" />
+        <div className="relative" ref={profileRef}>
           <button
             className="flex items-center gap-3 cursor-pointer p-0 bg-transparent border-none outline-none"
             onClick={() => setProfileOption((v) => !v)}
-            ref={profileRef}
+            aria-haspopup="true"
+            aria-expanded={profileOption}
+            aria-label="User Profile Menu Toggle"
           >
             <img
-              src="/placeholder.webp"
+              src={logginSeller?.profilePic || "/placeholder.webp"}
               alt="User"
               className="w-11 h-11 rounded-full object-cover border-2 border-primary"
             />
             <div className="hidden sm:block text-left">
-              <div className="font-semibold text-base sm:text-lg">Sagar</div>
+              <div className="font-semibold text-base sm:text-lg">
+                {logginSeller?.username?.firstName || "Seller"}
+              </div>
               <div className="text-xs text-gray-400">Seller</div>
             </div>
             <HiChevronDown className="text-xl text-gray-400" />
           </button>
-          {/* Profile Dropdown */}
           {profileOption && (
             <div className="absolute top-[68px] right-0 z-50 bg-base-100 rounded-lg shadow-lg border w-48 px-4 py-3 flex flex-col gap-2 animate-fade-in">
-              <button className="btn btn-outline btn-sm normal-case">Logout</button>
               <button
-                className="btn btn-ghost btn-xs text-error self-end"
                 onClick={() => setProfileOption(false)}
+                className="btn btn-ghost btn-xs text-error self-end"
+                aria-label="Close profile dropdown"
               >
                 <MdCancel size={18} />
               </button>
             </div>
           )}
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="btn btn-outline btn-sm normal-case"
+          aria-label="Logout"
+        >
+          Logout
+        </button>
       </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-10 px-6 space-y-10">
-        {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold leading-snug mb-1 tracking-tight">Dashboard</h1>
+            <h1 className="text-3xl font-bold leading-snug mb-1 tracking-tight">
+              Dashboard
+            </h1>
             <p className="text-gray-400">Welcome back! Here's your store overview</p>
           </div>
           <div className="flex items-center gap-4">
@@ -101,18 +138,18 @@ const SellerDashboard = () => {
             <div>
               <h3 className="text-md font-semibold text-gray-400">Total Revenue</h3>
               <h2 className="mt-2 text-3xl font-bold flex items-center gap-2 text-primary">
-                <HiOutlineCurrencyRupee size={24} /> 42,354
+                <HiOutlineCurrencyRupee size={24} /> {ordersDetails.totalSale}
               </h2>
             </div>
             <div className="text-primary text-4xl self-end opacity-50">
               <HiOutlineCash />
             </div>
           </div>
-          {/* Total Orders */}
+
           <div className="card bg-base-100 shadow p-6 min-h-[160px] justify-between hover:shadow-lg transition">
             <div>
               <h3 className="text-md font-semibold text-gray-400">Total Orders</h3>
-              <h2 className="mt-2 text-3xl font-bold">3,213</h2>
+              <h2 className="mt-2 text-3xl font-bold">{ordersDetails.totalProductSold}</h2>
             </div>
             <div className="text-secondary text-4xl self-end opacity-50">
               <HiOutlineShoppingCart />
@@ -122,7 +159,7 @@ const SellerDashboard = () => {
           <div className="card bg-base-100 shadow p-6 min-h-[160px] justify-between hover:shadow-lg transition">
             <div>
               <h3 className="text-md font-semibold text-gray-400">Products Sold</h3>
-              <h2 className="mt-2 text-3xl font-bold">1,234</h2>
+              <h2 className="mt-2 text-3xl font-bold">{ordersDetails.totalProductSold}</h2>
             </div>
             <div className="text-accent text-4xl self-end opacity-50">
               <HiOutlineShoppingBag />
@@ -132,7 +169,7 @@ const SellerDashboard = () => {
           <div className="card bg-base-100 shadow p-6 min-h-[160px] justify-between hover:shadow-lg transition">
             <div>
               <h3 className="text-md font-semibold text-gray-400">Active Products</h3>
-              <h2 className="mt-2 text-3xl font-bold">1,234</h2>
+              <h2 className="mt-2 text-3xl font-bold">{totalItemsInStock}</h2>
             </div>
             <div className="text-info text-5xl self-end opacity-50">
               <HiCheckCircle />
@@ -140,57 +177,63 @@ const SellerDashboard = () => {
           </div>
         </div>
 
-        {/* Recent Orders & Top Products */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Recent Orders */}
-          <section className="md:col-span-2 bg-base-100 shadow-md rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Recent Orders</h2>
-              <Link to="#" className="link link-primary text-sm hover:underline">
-                View All
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5, 6, 7].map((id) => (
-                <div
-                  key={id}
-                  className="flex justify-between items-center border-b border-gray-700 pb-3 last:border-b-0"
-                >
-                  <div>
-                    <h3 className="font-semibold leading-tight">
-                      Ord-00{id}
-                      <span className="badge badge-success ml-2 text-xs font-normal">
-                        Delivered
-                      </span>
-                    </h3>
-                    <p className="text-gray-400">John Smith</p>
-                    <p className="text-gray-600 text-sm">Wireless headphone</p>
-                  </div>
-                  <div className="text-right">
-                    <h4 className="text-primary flex items-center gap-1 font-semibold justify-end text-lg">
-                      <HiOutlineCurrencyRupee size={18} /> 4,234
-                    </h4>
-                    <p className="text-xs text-gray-400">2024-04-01</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* Recent Orders */}
+        <section className="md:col-span-2 bg-base-100 shadow-md rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Recent Orders</h2>
+            <Link to="#" className="link link-primary text-sm hover:underline">
+              View All
+            </Link>
+          </div>
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            {orderList.length === 0 ? (
+              <p className="text-center text-gray-500">No recent orders found.</p>
+            ) : (
+              orderList.slice(0, 7).map((order) => {
+                const itemsTotal = order.orderItems.reduce(
+                  (sum, item) => sum + item.price * item.qty,
+                  0
+                );
+                const statusLabel = order.isDelivered ? "Delivered" : "Processing";
+                const statusClass = order.isDelivered ? "badge-success" : "badge-warning";
 
-          {/* Top Products */}
-          <section className="bg-base-100 shadow-md rounded-lg p-6 flex flex-col justify-between overflow-y-scroll">
-            <h2 className="text-xl font-semibold mb-2">Top Products</h2>
-            {[1, 2, 3, 4, 5, 6].map((id) => (
-              <div key={id} className="mb-4 last:mb-0">
-                <p className="text-gray-400">423 sales</p>
-                <h3 className="text-3xl font-bold flex items-center gap-1 text-primary">
-                  <HiOutlineCurrencyRupee size={20} />
-                  4,23,442
-                </h3>
-              </div>
-            ))}
-          </section>
-        </div>
+                return (
+                  <div
+                    key={order._id}
+                    className="flex justify-between items-center border-b border-gray-700 pb-3 last:border-b-0"
+                  >
+                    <div>
+                      <h3 className="font-semibold leading-tight">
+                        Ord-{order._id.slice(-6).toUpperCase()}
+                        <span className={`badge ml-2 text-xs font-normal ${statusClass}`}>
+                          {statusLabel}
+                        </span>
+                      </h3>
+                      <p className="text-gray-400">
+                        {order.user?.username?.firstName} {order.user?.username?.lastName}
+                      </p>
+                      <div className="text-gray-600 text-sm max-h-24 overflow-y-auto">
+                        {order.orderItems.map((item) => (
+                          <div key={item._id} className="mb-1">
+                            {item.product?.title || item.name} x {item.qty}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <h4 className="text-primary flex items-center gap-1 font-semibold justify-end text-lg">
+                        <HiOutlineCurrencyRupee size={18} /> {itemsTotal.toLocaleString()}
+                      </h4>
+                      <p className="text-xs text-gray-400">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

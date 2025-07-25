@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { FaPlus } from "react-icons/fa";
-import { MdArrowBackIos, MdArrowForwardIos, MdDashboard, MdShoppingCart, MdSettings, MdListAlt } from "react-icons/md";
-import { Link, useLocation } from "react-router"; // fixed react-router import
+import { MdArrowBackIos, MdArrowForwardIos, MdDashboard, MdShoppingCart, MdSettings, MdListAlt, MdLogout } from "react-icons/md";
+import { useDispatch } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router"; 
+import { sellerLogout } from "../../store/seller/sellerThunk";
+import { toast } from "react-toastify";
 
 const SellerSidebar = () => {
-  // Define links with actual icon components
+  const dispatch= useDispatch()
+  const navigate= useNavigate();
   const SideLinks = [
     {
       name: "Dashboard",
@@ -30,6 +34,22 @@ const SellerSidebar = () => {
 
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  
+
+  const handleLogout = () => {
+    dispatch(sellerLogout()).then((res)=>{
+      if(res?.meta?.rejectedWithValue) {
+        toast.error(res.payload.message || "Logout failed");
+      }else{
+       
+        
+        toast.success("Logged out successfully");
+        localStorage.removeItem("sellerToken");
+        navigate("/seller-login");
+      }
+    })
+
+  };
 
   return (
     <div
@@ -37,7 +57,6 @@ const SellerSidebar = () => {
         collapsed ? "w-16" : "w-60"
       }`}
     >
-      {/* Logo and collapse button */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-gray-300 dark:border-gray-700">
         <div className="flex items-center space-x-2">
           <img src="/Logo.png" alt="Logo" className={`h-8 w-auto transition-all duration-300 ${collapsed ? "hidden" : "block"}`} />
@@ -52,7 +71,6 @@ const SellerSidebar = () => {
         </button>
       </div>
 
-      {/* Navigation Links */}
       <nav className="flex flex-col flex-grow mt-4 space-y-1 overflow-y-auto">
         {SideLinks.map(({ name, path, icon: Icon }) => {
           const isActive = location.pathname === path;
@@ -75,11 +93,9 @@ const SellerSidebar = () => {
         })}
       </nav>
 
-      {/* Add Product Button */}
-      <div className="p-4 border-t border-gray-300 dark:border-gray-700">
+      <div className="p-4 border-t border-gray-300 dark:border-gray-700 flex flex-col gap-2">
         <Link 
-        to='/seller-home/add-Product' 
-        
+          to="/seller-home/add-Product" 
           type="button"
           className={`btn btn-primary btn-block gap-2 normal-case justify-center ${
             collapsed ? "btn-square btn-sm" : ""
@@ -88,6 +104,17 @@ const SellerSidebar = () => {
           <FaPlus size={collapsed ? 16 : 20} />
           {!collapsed && "Add Product"}
         </Link>
+
+        <button
+          onClick={handleLogout}
+          className={`btn btn-error btn-block gap-2 normal-case justify-center ${
+            collapsed ? "btn-square btn-sm" : ""
+          }`}
+          type="button"
+        >
+          <MdLogout size={collapsed ? 16 : 20} />
+          {!collapsed && "Logout"}
+        </button>
       </div>
     </div>
   );

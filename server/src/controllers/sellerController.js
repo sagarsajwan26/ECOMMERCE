@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { EmailVerification } from "../models/emailVerification.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { Product } from "../models/products.model.js";
+import { orderModel } from "../models/order.model.js";
 
 
 
@@ -155,7 +156,9 @@ export const loginSeller= AsyncHandler(async(req,res)=>{
     if(!email.trim() || !password.trim()) {
         return res.status(400).json({ message: "All fields are required" });
     }
-        const existingSeller= await Seller.findOne({email}).select("+password")
+        const existingSeller= await Seller.findOne({email}).select("+password").populate({
+            path:'currentSellingProducts'
+        })
         if(!existingSeller) return res.status(401).json({message:"user not found"})
 
                 const checkBlocked= existingSeller.isBlocked  
@@ -195,7 +198,11 @@ export const loginSeller= AsyncHandler(async(req,res)=>{
 
 export const logoutSeller= AsyncHandler(async(req,res)=>{
 
-    return res.status(200).cookie('sellerToken','').json({message:"successfully logged out"})
+    return res.status(200).cookie('sellerToken', '', {
+        maxAge: 0,
+        httpOnly: true,
+        path: '/', 
+    }).json({message:"successfully logged out"})
 
 })
 
@@ -211,6 +218,8 @@ export const getSellerProfile= AsyncHandler(async(req,res)=>{
 export const addProduct= AsyncHandler(async(req,res)=>{
     const {title, description,  category, price, discount, stock, publish}=req.body
    
+console.log(req.files);
+
   
     const images= req.files
     
@@ -316,10 +325,93 @@ if(!title.trim()|| !description.trim() || !category.trim() || !price || !stock )
     })
 
 
-    export const getOrderList= AsyncHandler(async(req,res)=>{
-        const logginSellerId= req.seller.id 
-       
-        const seller= await Seller.findByIdAndDelete(logginSellerId)
-         console.log(seller);
-         
+   export const getOrderList = AsyncHandler(async (req, res) => {
+  const sellerId = req.seller._id;
+
+  const seller = await Seller.findById(sellerId)
+  if (!seller) return res.status(404).json({ message: "Seller not found" });
+
+ 
+  const orders= await orderModel.find({
+    'orderItems.product':{
+        $in: seller.currentSellingProducts
+    }
+  }).populate({
+    path:'orderItems.product',
+    select:"title description price images"
+  }).populate({
+    path:'user',
+    select:'username email'
+  }).lean()
+
+
+  
+ const filteredOrders= orders.map(order=>{
+    order.orderItems= order.orderItems.filter(item=> (
+        seller.currentSellingProducts.some(prodId=> (
+            prodId.toString() === item.product._id.toString()
+        ))
+ 
+    ))
+           return order
+ })
+
+
+
+ const totalSale = filteredOrders.reduce((accOrder, order)=>{
+    const orderSum= order.orderItems.reduce((accItem, item)=> accItem+ item.price * item.qty,0) ;
+    return accOrder + orderSum  },0);
+
+const totalProductSold= filteredOrders.reduce((accOrder, order)=>{
+    const qtySum= order.orderItems.reduce((qty, item)=>  qty+ item.qty,0 )
+    return accOrder+ qtySum
+},0)
+
+
+
+
+  res.status(200).json({
+    success: true,
+    count: filteredOrders.length,
+    orders: filteredOrders,
+    totalSale: Number(totalSale.toFixed(2)),
+    totalProductSold:Number(totalProductSold)
+  });
+});
+
+
+export const UpdateSellerProfile= AsyncHandler(async(req,res)=>{
+    const { firstName, lastName, contactNumber, storeName, address}= req.body 
+    if(!firstName.trim() || !contactNumber || !storeName.trim() || !address.trim() ){
+        return res.status(401).json({message:"fields can't be empty"})
+    }
+    const updateProfile= await Seller.findByIdAndUpdate(req.seller._id,{
+        username:{
+            firstName,
+            lastName
+        },
+        contactNumber,
+        storeName,
+        address
+    },{
+        new:true
     })
+    return res.status(200).json(new ApiResponse(200,updateProfile,'profile details updated successfully'))
+})
+
+export const updateSellerProfilePic= AsyncHandler(async(req,res)=>{
+const image= req.file 
+
+
+if(!image ) return res.status(404).json({message:"profile pic is required"}) 
+    const uploadImage = await uploadToCloudinary(image.path)
+
+
+        if(!uploadImage) return res.status(500).json({message:"internal server error profile pic update failed please try after some time"})
+            const updateProfilePic= await Seller.findByIdAndUpdate(req.seller._id,{
+                profilePic:uploadImage.secure_url
+            },{new:true})
+            console.log(updateProfilePic);
+            
+return res.status(200).json(new ApiResponse(200, updateProfilePic,"profile pic updated successfully"))
+        })

@@ -5,6 +5,8 @@ import { User } from '../models/user.model.js';
 
 
 export const verifySellerToken = async(req,res,next)=>{
+
+
   
     const token= req.cookies?.sellerToken || req.headers?.authorization.split(' ')[1]
     
@@ -12,12 +14,12 @@ export const verifySellerToken = async(req,res,next)=>{
 
     if(!token) return res.status(401).json({message:"unauthorized access"})
         const decoded= jwt.verify(token, process.env.JWT_SECRET)
-console.log(decoded);
+
 
         
     if(!decoded) return res.status(401).json({message:"unauthorized access"}) 
         const seller= await Seller.findById(decoded.id).select('-password')
-    console.log(seller);
+
     if(!seller) return res.status(404).json({message:"seller not found"})
 
         req.seller= seller;
